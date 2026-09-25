@@ -12,7 +12,7 @@ const state = {
     { id:"PC-02", agent:"AGENT-PC-02", status:"ONLINE", student:"Rahul Kumar", roll:"25H51A06XX", lastSeen:"1 min ago" }
   ],
   students: [
-    { name:"Prathiba Rani", roll:"25H51A0667", pc:"PC-01", status:"ACTIVE" },
+    { name:"Prathiba Rani", roll:"25H51A66XX", pc:"PC-01", status:"ACTIVE" },
     { name:"Rahul Kumar", roll:"25H51A06XX", pc:"PC-02", status:"ACTIVE" }
   ],
   rules: [
@@ -196,7 +196,44 @@ const server = http.createServer(async (req,res)=>{
 
   return json(res, 201, student);
 }
+if (u.pathname === "/api/students" && req.method === "DELETE") {
+  const roll = u.searchParams.get("roll");
 
+  if (!roll) {
+    return json(res, 400, {
+      error: "Roll number is required."
+    });
+  }
+
+  const index = state.students.findIndex(
+    s => s.roll.toLowerCase() === roll.toLowerCase()
+  );
+
+  if (index === -1) {
+    return json(res, 404, {
+      error: "Student not found."
+    });
+  }
+
+  const student = state.students[index];
+
+  // Free the PC assigned to this student
+  const pcRecord = state.pcs.find(
+    p => p.id === student.pc
+  );
+
+  if (pcRecord) {
+    pcRecord.student = "";
+    pcRecord.roll = "";
+  }
+
+  // Delete the student
+  state.students.splice(index, 1);
+
+  return json(res, 200, {
+    message: "Student deleted successfully."
+  });
+}
     if (u.pathname === "/api/rules" && req.method==="POST") {
       const b=await body(req); if(!b.name||!b.pattern)return json(res,400,{error:"Name and pattern are required."});
       const r={id:Date.now(),name:b.name,pattern:b.pattern,type:b.type||"ALERT",enabled:true}; state.rules.push(r); return json(res,201,r);

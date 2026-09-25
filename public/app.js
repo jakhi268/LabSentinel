@@ -92,8 +92,7 @@ async function students(){
 </div>
     </form>
   </div>
-  <div class="table-wrap"><table class="table"><thead><tr><th>Name</th><th>Roll Number</th><th>Assigned PC</th><th>Status</th></tr></thead><tbody>${s.map(x=>`<tr><td><b>${esc(x.name)}</b></td><td>${esc(x.roll)}</td><td>${esc(x.pc)}</td><td>${badge(x.status)}</td></tr>`).join("")}</tbody></table></div>`;
-
+  <div class="table-wrap"><table class="table"><thead><tr><th>Name</th><th>Roll Number</th><th>Assigned PC</th><th>Status</th><th>Action</th></tr></thead><tbody>${s.map(x=>`<tr><td><b>${esc(x.name)}</b></td><td>${esc(x.roll)}</td><td>${esc(x.pc)}</td><td>${badge(x.status)}</td><td><button class="btn ghost" onclick="deleteStudent('${esc(x.roll)}')">Delete</button></td></tr>`).join("")}</tbody></table></div>`;
   document.getElementById("addStudentForm").addEventListener("submit", async e=>{
     e.preventDefault();
     try {
@@ -111,7 +110,20 @@ async function students(){
 }
 function showAddStudent(){const f=document.getElementById("studentForm"); if(f) f.style.display="block"; document.getElementById("studentName")?.focus()}
 function hideAddStudent(){const f=document.getElementById("studentForm"); if(f) f.style.display="none"}
+async function deleteStudent(roll){
+  if(!confirm("Are you sure you want to delete this student?")) return;
 
+  try {
+    await api(`/api/students?roll=${encodeURIComponent(roll)}`, {
+      method: "DELETE"
+    });
+
+    toast("Student deleted successfully");
+    students();
+  } catch(err) {
+    toast(err.message);
+  }
+}
 async function rules(){
   const r=await api("/api/rules");
   content.innerHTML=`<div class="page-head"><div><div class="eyebrow">POLICIES</div><h1>Monitoring Rules</h1><p>Configure rules used by the PC monitoring agent.</p></div><button class="btn" onclick="addRule()">+ Add Rule</button></div>
