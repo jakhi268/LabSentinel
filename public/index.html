@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>LabSentinel</title>
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">LS</div>
+        <div><strong>LABSENTINEL</strong><span>LAB MONITORING</span></div>
+      </div>
+
+      <nav id="nav">
+        <button class="nav-item active" data-page="dashboard"><span>▦</span>Dashboard</button>
+        <button class="nav-item" data-page="live"><span>◉</span>Live Monitoring</button>
+        <button class="nav-item" data-page="alerts"><span>!</span>Active Alerts</button>
+        <button class="nav-item" data-page="history"><span>◷</span>Alert History</button>
+        <button class="nav-item" data-page="pcs"><span>▣</span>PC Management</button>
+        <button class="nav-item" data-page="students"><span>♙</span>Student Management</button>
+        <button class="nav-item" data-page="rules"><span>⚙</span>Monitoring Rules</button>
+        <button class="nav-item" data-page="notifications"><span>♢</span>Notifications <b id="navBadge">0</b></button>
+        <button class="nav-item" data-page="settings"><span>◌</span>Settings</button>
+      </nav>
+      <div class="sidebar-bottom"><button id="logout" class="logout">↪ Logout</button></div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div class="crumb"><span class="dot"></span><span>SECURE SESSION</span></div>
+        <div class="top-actions">
+          <button class="icon-btn" title="Notifications" onclick="showPage('notifications')">♢</button>
+          <div class="avatar">A</div>
+        </div>
+      </header>
+      <section id="content"></section>
+    </main>
+  </div>
+  <div id="toast" class="toast"></div>
+  <script src="/app.js"></script>
+</body>
+</html>
