@@ -61,8 +61,16 @@ async function pcs(){
   <div class="table-wrap"><table class="table"><thead><tr><th>PC Number</th><th>Agent ID</th><th>Status</th><th>Assigned Student</th><th>Last Seen</th></tr></thead><tbody>${p.map(x=>`<tr><td><b>${esc(x.id)}</b></td><td>${esc(x.agent)}</td><td>${badge(x.status)}</td><td>${esc(x.student)}</td><td>${esc(x.lastSeen)}</td></tr>`).join("")}</tbody></table></div>`;
 }
 async function students(){
-  const s=await api("/api/students");
-  content.innerHTML=`<div class="page-head"><div><div class="eyebrow">USERS</div><h1>Student Management</h1><p>${s.length} registered student(s)</p></div><button class="btn" onclick="showAddStudent()">+ Add Student</button></div>
+  const [s, pcs] = await Promise.all([api("/api/students"), api("/api/pcs")]);
+  const assignedCount = s.filter(x => x.pc && x.pc !== "Unassigned").length;
+  const availableCount = Math.max(pcs.length - assignedCount, 0);
+
+  content.innerHTML=`<div class="page-head"><div><div class="eyebrow">USERS</div><h1>Student Management</h1><p>${s.length} registered student(s) · ${assignedCount} PC(s) assigned · ${availableCount} available</p></div><button class="btn" onclick="showAddStudent()">+ Add Student</button></div>
+  <div class="stats-grid" style="margin-bottom:14px">
+    <div class="stat-card"><div class="stat-label">TOTAL PCs</div><div class="stat-value">${pcs.length}</div></div>
+    <div class="stat-card"><div class="stat-label">ASSIGNED PCs</div><div class="stat-value">${assignedCount}</div></div>
+    <div class="stat-card"><div class="stat-label">AVAILABLE PCs</div><div class="stat-value">${availableCount}</div></div>
+  </div>
   <div id="studentForm" class="panel" style="display:none;margin-bottom:14px">
     <div class="panel-title"><h3>Add New Student</h3><button class="btn ghost" onclick="hideAddStudent()">Cancel</button></div>
     <form id="addStudentForm">
@@ -71,20 +79,26 @@ async function students(){
         <input class="input" id="studentRoll" placeholder="Roll number" required>
       </div>
       <div class="toolbar">
-        <select class="select" id="studentPc"><option value="Unassigned">Unassigned</option>${[...new Set((await api("/api/pcs")).map(x=>x.id))].map(x=>`<option value="${esc(x)}">${esc(x)}</option>`).join("")}</select>
+        <select class="select" id="studentPc"><option value="Unassigned">Unassigned</option>${pcs.map(x=>`<option value="${esc(x.id)}">${esc(x.id)}${x.student ? ` — ${esc(x.student)}` : ""}</option>`).join("")}</select>
         <select class="select" id="studentStatus"><option>ACTIVE</option><option>INACTIVE</option></select>
         <button class="btn" type="submit">Add Student</button>
       </div>
     </form>
   </div>
   <div class="table-wrap"><table class="table"><thead><tr><th>Name</th><th>Roll Number</th><th>Assigned PC</th><th>Status</th></tr></thead><tbody>${s.map(x=>`<tr><td><b>${esc(x.name)}</b></td><td>${esc(x.roll)}</td><td>${esc(x.pc)}</td><td>${badge(x.status)}</td></tr>`).join("")}</tbody></table></div>`;
+
   document.getElementById("addStudentForm").addEventListener("submit", async e=>{
     e.preventDefault();
     try {
+      const pc = document.getElementById("studentPc").value;
+      if (pc !== "Unassigned" && s.some(x => x.pc === pc)) {
+        toast("That PC is already assigned. Please choose another PC.");
+        return;
+      }
       await api("/api/students",{method:"POST",body:JSON.stringify({
         name:document.getElementById("studentName").value,
         roll:document.getElementById("studentRoll").value,
-        pc:document.getElementById("studentPc").value,
+        pc,
         status:document.getElementById("studentStatus").value
       })});
       toast("Student added successfully");

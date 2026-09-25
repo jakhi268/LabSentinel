@@ -24,3 +24,6 @@ The current version includes a working Express API with demo data so the UI is i
 
 ## Student Management
 Use **Student Management → + Add Student** to add a student with name, roll number, optional PC assignment, and status. The backend prevents duplicate roll numbers.
+
+## Assigned PC Count
+Student Management now calculates assigned and available PC counts dynamically from the current student assignments and registered PCs.
