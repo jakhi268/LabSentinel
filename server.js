@@ -59,6 +59,35 @@ const server = http.createServer(async (req,res)=>{
       return json(res,200,{totalPcs:state.pcs.length,onlinePcs:state.pcs.filter(p=>p.status==="ONLINE").length,activeAlerts:state.alerts.length,totalStudents:state.students.length,unreadNotifications:state.notifications.filter(n=>n.unread).length,recentAlerts:state.alerts.slice(0,5)});
     if (u.pathname === "/api/pcs" && req.method==="GET") return json(res,200,state.pcs);
     if (u.pathname === "/api/students" && req.method==="GET") return json(res,200,state.students);
+    if (u.pathname === "/api/agent/heartbeat" && req.method === "POST") {
+    const b = await body(req);
+
+    if (!b.pc || !b.agent) {
+      return json(res, 400, {
+        error: "PC and agent ID are required."
+      });
+    }
+
+    const pc = state.pcs.find(p => p.id === b.pc);
+
+    if (!pc) {
+      return json(res, 404, {
+        error: "PC not found."
+      });
+    }
+
+    pc.status = "ONLINE";
+    pc.lastSeen = new Date().toLocaleString("en-IN");
+
+    return json(res, 200, {
+      message: "Heartbeat received",
+      pc: pc.id,
+      status: pc.status,
+      lastSeen: pc.lastSeen
+    });
+  }
+
+  if (u.pathname === "/api/rules" && req.method==="GET") return json(res,200,state.rules);
     if (u.pathname === "/api/rules" && req.method==="GET") return json(res,200,state.rules);
     if (u.pathname === "/api/alerts" && req.method==="GET") return json(res,200,state.alerts);
     if (u.pathname === "/api/history" && req.method==="GET") return json(res,200,state.history);
