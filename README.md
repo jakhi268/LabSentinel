@@ -21,3 +21,6 @@ The generated Render address will be based on your chosen service name and will 
 Dashboard, Live Monitoring, Active Alerts, Alert History, PC Management, Student Management, Monitoring Rules, Notifications, Settings.
 
 The current version includes a working Express API with demo data so the UI is interactive. Replace the demo API state with your database/authentication when connecting your real monitoring agent.
+
+## Student Management
+Use **Student Management → + Add Student** to add a student with name, roll number, optional PC assignment, and status. The backend prevents duplicate roll numbers.

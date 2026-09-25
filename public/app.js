@@ -62,9 +62,39 @@ async function pcs(){
 }
 async function students(){
   const s=await api("/api/students");
-  content.innerHTML=`<div class="page-head"><div><div class="eyebrow">USERS</div><h1>Student Management</h1><p>${s.length} registered student(s)</p></div></div>
-  <div class="table-wrap"><table class="table"><thead><tr><th>Name</th><th>Roll Number</th><th>Assigned PC</th><th>Status</th><th>Links</th></tr></thead><tbody>${s.map(x=>`<tr><td><b>${esc(x.name)}</b></td><td>${esc(x.roll)}</td><td>${esc(x.pc)}</td><td>${badge(x.status)}</td><td><button class="btn ghost" style="height:28px;padding:0 9px" onclick="toast('Student profile opened')">Student</button></td></tr>`).join("")}</tbody></table></div>`;
+  content.innerHTML=`<div class="page-head"><div><div class="eyebrow">USERS</div><h1>Student Management</h1><p>${s.length} registered student(s)</p></div><button class="btn" onclick="showAddStudent()">+ Add Student</button></div>
+  <div id="studentForm" class="panel" style="display:none;margin-bottom:14px">
+    <div class="panel-title"><h3>Add New Student</h3><button class="btn ghost" onclick="hideAddStudent()">Cancel</button></div>
+    <form id="addStudentForm">
+      <div class="toolbar">
+        <input class="input" id="studentName" placeholder="Student name" required>
+        <input class="input" id="studentRoll" placeholder="Roll number" required>
+      </div>
+      <div class="toolbar">
+        <select class="select" id="studentPc"><option value="Unassigned">Unassigned</option>${[...new Set((await api("/api/pcs")).map(x=>x.id))].map(x=>`<option value="${esc(x)}">${esc(x)}</option>`).join("")}</select>
+        <select class="select" id="studentStatus"><option>ACTIVE</option><option>INACTIVE</option></select>
+        <button class="btn" type="submit">Add Student</button>
+      </div>
+    </form>
+  </div>
+  <div class="table-wrap"><table class="table"><thead><tr><th>Name</th><th>Roll Number</th><th>Assigned PC</th><th>Status</th></tr></thead><tbody>${s.map(x=>`<tr><td><b>${esc(x.name)}</b></td><td>${esc(x.roll)}</td><td>${esc(x.pc)}</td><td>${badge(x.status)}</td></tr>`).join("")}</tbody></table></div>`;
+  document.getElementById("addStudentForm").addEventListener("submit", async e=>{
+    e.preventDefault();
+    try {
+      await api("/api/students",{method:"POST",body:JSON.stringify({
+        name:document.getElementById("studentName").value,
+        roll:document.getElementById("studentRoll").value,
+        pc:document.getElementById("studentPc").value,
+        status:document.getElementById("studentStatus").value
+      })});
+      toast("Student added successfully");
+      students();
+    } catch(err) { toast(err.message); }
+  });
 }
+function showAddStudent(){const f=document.getElementById("studentForm"); if(f) f.style.display="block"; document.getElementById("studentName")?.focus()}
+function hideAddStudent(){const f=document.getElementById("studentForm"); if(f) f.style.display="none"}
+
 async function rules(){
   const r=await api("/api/rules");
   content.innerHTML=`<div class="page-head"><div><div class="eyebrow">POLICIES</div><h1>Monitoring Rules</h1><p>Configure rules used by the PC monitoring agent.</p></div><button class="btn" onclick="addRule()">+ Add Rule</button></div>

@@ -64,6 +64,22 @@ const server = http.createServer(async (req,res)=>{
     if (u.pathname === "/api/history" && req.method==="GET") return json(res,200,state.history);
     if (u.pathname === "/api/notifications" && req.method==="GET") return json(res,200,state.notifications);
 
+
+    if (u.pathname === "/api/students" && req.method==="POST") {
+      const b = await body(req);
+      if (!b.name || !b.roll) return json(res,400,{error:"Student name and roll number are required."});
+      const student = {
+        name: b.name.trim(),
+        roll: b.roll.trim(),
+        pc: (b.pc || "Unassigned").trim(),
+        status: b.status || "ACTIVE"
+      };
+      const exists = state.students.some(x => x.roll.toLowerCase() === student.roll.toLowerCase());
+      if (exists) return json(res,409,{error:"A student with this roll number already exists."});
+      state.students.push(student);
+      return json(res,201,student);
+    }
+
     if (u.pathname === "/api/rules" && req.method==="POST") {
       const b=await body(req); if(!b.name||!b.pattern)return json(res,400,{error:"Name and pattern are required."});
       const r={id:Date.now(),name:b.name,pattern:b.pattern,type:b.type||"ALERT",enabled:true}; state.rules.push(r); return json(res,201,r);
