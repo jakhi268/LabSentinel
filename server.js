@@ -65,20 +65,137 @@ const server = http.createServer(async (req,res)=>{
     if (u.pathname === "/api/notifications" && req.method==="GET") return json(res,200,state.notifications);
 
 
-    if (u.pathname === "/api/students" && req.method==="POST") {
-      const b = await body(req);
-      if (!b.name || !b.roll) return json(res,400,{error:"Student name and roll number are required."});
-      const student = {
-        name: b.name.trim(),
-        roll: b.roll.trim(),
-        pc: (b.pc || "Unassigned").trim(),
-        status: b.status || "ACTIVE"
-      };
-      const exists = state.students.some(x => x.roll.toLowerCase() === student.roll.toLowerCase());
-      if (exists) return json(res,409,{error:"A student with this roll number already exists."});
-      state.students.push(student);
-      return json(res,201,student);
+    if (u.pathname === "/api/students" && req.method === "POST") {
+  const b = await body(req);
+
+  if (!b.name || !b.roll) {
+    return json(res, 400, {
+      error: "Student name and roll number are required."
+    });
+  }
+
+  const name = b.name.trim();
+  const roll = b.roll.trim();
+  let requestedPc = (b.pc || "AUTO").trim();
+
+  // Check duplicate roll number
+  const exists = state.students.some(
+    x => x.roll.toLowerCase() === roll.toLowerCase()
+  );
+
+  if (exists) {
+    return json(res, 409, {
+      error: "A student with this roll number already exists."
+    });
+  }
+
+  let pc;
+
+  // =========================
+  // AUTO PC ASSIGNMENT
+  // =========================
+  if (requestedPc === "AUTO" || requestedPc === "Unassigned") {
+
+    // Find first PC that is not assigned to a student
+    const assignedPcs = new Set(
+      state.students
+        .map(s => s.pc)
+        .filter(p => p && p !== "Unassigned")
+    );
+
+    const freePc = state.pcs.find(
+      p => !assignedPcs.has(p.id)
+    );
+
+    if (freePc) {
+      pc = freePc.id;
+    } else {
+
+      // No free PC → create the next PC automatically
+      const numbers = state.pcs
+        .map(p => {
+          const match = String(p.id).match(/^PC-(\d+)$/);
+          return match ? Number(match[1]) : 0;
+        });
+
+      const nextNumber = Math.max(0, ...numbers) + 1;
+
+      pc = `PC-${String(nextNumber).padStart(2, "0")}`;
+
+      state.pcs.push({
+        id: pc,
+        agent: `AGENT-${pc}`,
+        status: "OFFLINE",
+        student: name,
+        roll: roll,
+        lastSeen: "Never"
+      });
     }
+
+  } else {
+
+    // =========================
+    // MANUAL PC ASSIGNMENT
+    // =========================
+
+    pc = requestedPc;
+
+    // Check whether this PC is already assigned
+    const alreadyAssigned = state.students.some(
+      s => s.pc === pc
+    );
+
+    if (alreadyAssigned) {
+      return json(res, 409, {
+        error: `${pc} is already assigned to another student.`
+      });
+    }
+
+    // If manually entering a new PC, create it
+    let pcRecord = state.pcs.find(
+      p => p.id === pc
+    );
+
+    if (!pcRecord) {
+      pcRecord = {
+        id: pc,
+        agent: `AGENT-${pc}`,
+        status: "OFFLINE",
+        student: name,
+        roll: roll,
+        lastSeen: "Never"
+      };
+
+      state.pcs.push(pcRecord);
+    } else {
+      pcRecord.student = name;
+      pcRecord.roll = roll;
+    }
+  }
+
+  // Create student
+  const student = {
+    name,
+    roll,
+    pc,
+    status: b.status || "ACTIVE"
+  };
+
+  // Save student
+  state.students.push(student);
+
+  // Update PC record
+  const pcRecord = state.pcs.find(
+    p => p.id === pc
+  );
+
+  if (pcRecord) {
+    pcRecord.student = name;
+    pcRecord.roll = roll;
+  }
+
+  return json(res, 201, student);
+}
 
     if (u.pathname === "/api/rules" && req.method==="POST") {
       const b=await body(req); if(!b.name||!b.pattern)return json(res,400,{error:"Name and pattern are required."});

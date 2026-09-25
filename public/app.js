@@ -62,7 +62,9 @@ async function pcs(){
 }
 async function students(){
   const [s, pcs] = await Promise.all([api("/api/students"), api("/api/pcs")]);
-  const assignedCount = s.filter(x => x.pc && x.pc !== "Unassigned").length;
+  const assignedCount = new Set(
+  s.map(x => x.pc).filter(pc => pc && pc !== "Unassigned")
+).size;
   const availableCount = Math.max(pcs.length - assignedCount, 0);
 
   content.innerHTML=`<div class="page-head"><div><div class="eyebrow">USERS</div><h1>Student Management</h1><p>${s.length} registered student(s) · ${assignedCount} PC(s) assigned · ${availableCount} available</p></div><button class="btn" onclick="showAddStudent()">+ Add Student</button></div>
@@ -80,7 +82,7 @@ async function students(){
       </div>
       <div class="toolbar">
         <select class="select" id="studentPc"><option value="Unassigned">Unassigned</option>${pcs.map(x=>`<option value="${esc(x.id)}">${esc(x.id)}${x.student ? ` — ${esc(x.student)}` : ""}</option>`).join("")}</select>
-        <select class="select" id="studentStatus"><option>ACTIVE</option><option>INACTIVE</option></select>
+       <select class="select" id="studentPC"><option value="AUTO">AUTO - Assign next available PC</option>${pcs.map(x => { const assigned = s.some(st => st.pc === x.id); return `<option value="${esc(x.id)}" ${assigned ? "disabled" : ""}>${esc(x.id)}${assigned ? " - Assigned" : " - Available"}</option>`; }).join("")}</select>
         <button class="btn" type="submit">Add Student</button>
       </div>
     </form>
@@ -90,11 +92,7 @@ async function students(){
   document.getElementById("addStudentForm").addEventListener("submit", async e=>{
     e.preventDefault();
     try {
-      const pc = document.getElementById("studentPc").value;
-      if (pc !== "Unassigned" && s.some(x => x.pc === pc)) {
-        toast("That PC is already assigned. Please choose another PC.");
-        return;
-      }
+      const pc = document.getElementById("studentPC").value;
       await api("/api/students",{method:"POST",body:JSON.stringify({
         name:document.getElementById("studentName").value,
         roll:document.getElementById("studentRoll").value,
