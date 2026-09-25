@@ -81,10 +81,15 @@ async function students(){
         <input class="input" id="studentRoll" placeholder="Roll number" required>
       </div>
       <div class="toolbar">
-        <select class="select" id="studentPc"><option value="Unassigned">Unassigned</option>${pcs.map(x=>`<option value="${esc(x.id)}">${esc(x.id)}${x.student ? ` — ${esc(x.student)}` : ""}</option>`).join("")}</select>
-       <select class="select" id="studentPC"><option value="AUTO">AUTO - Assign next available PC</option>${pcs.map(x => { const assigned = s.some(st => st.pc === x.id); return `<option value="${esc(x.id)}" ${assigned ? "disabled" : ""}>${esc(x.id)}${assigned ? " - Assigned" : " - Available"}</option>`; }).join("")}</select>
-        <button class="btn" type="submit">Add Student</button>
-      </div>
+  <select class="select" id="studentPC"><option value="AUTO">AUTO - Assign next available PC</option>${pcs.map(x => { const assigned = s.some(st => st.pc === x.id); return `<option value="${esc(x.id)}" ${assigned ? "disabled" : ""}>${esc(x.id)}${assigned ? " - Assigned" : " - Available"}</option>`; }).join("")}</select>
+
+  <select class="select" id="studentStatus">
+    <option>ACTIVE</option>
+    <option>INACTIVE</option>
+  </select>
+
+  <button class="btn" type="submit">Add Student</button>
+</div>
     </form>
   </div>
   <div class="table-wrap"><table class="table"><thead><tr><th>Name</th><th>Roll Number</th><th>Assigned PC</th><th>Status</th></tr></thead><tbody>${s.map(x=>`<tr><td><b>${esc(x.name)}</b></td><td>${esc(x.roll)}</td><td>${esc(x.pc)}</td><td>${badge(x.status)}</td></tr>`).join("")}</tbody></table></div>`;
