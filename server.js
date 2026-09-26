@@ -10,6 +10,7 @@ const state = {
   pcs: [
     { id:"PC-01", agent:"AGENT-PC-01", status:"ONLINE", student:"Prathiba Rani", roll:"25H51A0667", lastSeen:"Just now" },
     { id:"PC-02", agent:"AGENT-PC-02", status:"ONLINE", student:"Rahul Kumar", roll:"25H51A06XX", lastSeen:"1 min ago" }
+    {id:"PC-03",agent:"AGENT-PC-03",status:"OFFLINE",student:"",roll:"",lastSeen:"Never"}
   ],
   students: [
     { name:"Prathiba Rani", roll:"25H51A66XX", pc:"PC-01", status:"ACTIVE" },
