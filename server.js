@@ -86,7 +86,66 @@ const server = http.createServer(async (req,res)=>{
       lastSeen: pc.lastSeen
     });
   }
+if (u.pathname === "/api/agent/event" && req.method === "POST") {
+  const b = await body(req);
 
+  if (!b.pc || !b.agent || !b.event) {
+    return json(res, 400, {
+      error: "PC, agent ID and event are required."
+    });
+  }
+
+  const pc = state.pcs.find(p => p.id === b.pc);
+
+  if (!pc) {
+    return json(res, 404, {
+      error: "PC not found."
+    });
+  }
+
+  if (pc.agent !== b.agent) {
+    return json(res, 403, {
+      error: "Agent ID does not match this PC."
+    });
+  }
+
+  const student = state.students.find(
+    s => s.pc === b.pc
+  );
+
+  const studentName = student ? student.name : "Unassigned";
+  const severity = b.severity || "HIGH";
+  const eventTime = new Date().toLocaleString("en-IN");
+
+  const alert = {
+    pc: b.pc,
+    student: studentName,
+    event: b.event,
+    severity: severity,
+    time: eventTime
+  };
+
+  state.alerts.unshift(alert);
+
+  state.history.unshift({
+    pc: b.pc,
+    student: studentName,
+    event: b.event,
+    time: eventTime
+  });
+
+  state.notifications.unshift({
+    title: `Alert on ${b.pc}`,
+    body: `${b.event} - ${studentName}`,
+    time: eventTime,
+    unread: true
+  });
+
+  return json(res, 200, {
+    message: "Event received",
+    alert: alert
+  });
+}
   if (u.pathname === "/api/rules" && req.method==="GET") return json(res,200,state.rules);
     if (u.pathname === "/api/rules" && req.method==="GET") return json(res,200,state.rules);
     if (u.pathname === "/api/alerts" && req.method==="GET") return json(res,200,state.alerts);
